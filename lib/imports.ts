@@ -1,4 +1,4 @@
-import { unqualifiedName, qualifiedName, modelFile } from './gen-utils';
+import { modelFile, qualifiedName, unqualifiedName } from './gen-utils';
 import { Options } from './options';
 
 export class Import {
@@ -7,12 +7,16 @@ export class Import {
   qualifiedName: string;
   file: string;
   useAlias: boolean;
+
   constructor(name: string, pathToModels: string, options: Options) {
+    const mappedModel = options.modelMappings?.find(m => m.name === name);
+    name = mappedModel ? mappedModel.mappingName : name;
+
     this.name = name;
     this.typeName = unqualifiedName(name, options);
     this.qualifiedName = qualifiedName(name, options);
     this.useAlias = this.typeName !== this.qualifiedName;
-    this.file = modelFile(pathToModels, name, options);
+    this.file = modelFile(pathToModels, name, options, mappedModel);
   }
 }
 

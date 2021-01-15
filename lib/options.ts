@@ -1,4 +1,3 @@
-
 /** Options used by ng-openapi-gen */
 export interface Options {
 
@@ -84,4 +83,12 @@ export interface Options {
 
   /** When specified, does not generate a $Json suffix. */
   skipJsonSuffix?: boolean;
+
+  modelMappings?: ModelMapping[];
+}
+
+export interface ModelMapping {
+  name: string;
+  mappingName: string;
+  mappingImport: string;
 }

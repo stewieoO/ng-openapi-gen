@@ -1,10 +1,10 @@
-import jsesc from 'jsesc';
 import fs from 'fs-extra';
-import path from 'path';
+import jsesc from 'jsesc';
 import { camelCase, deburr, kebabCase, upperCase, upperFirst } from 'lodash';
 import { OpenAPIObject, ReferenceObject, SchemaObject } from 'openapi3-ts';
-import { Options } from './options';
+import path from 'path';
 import { Model } from './model';
+import { ModelMapping, Options } from './options';
 
 export const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'];
 type SchemaOrRef = SchemaObject | ReferenceObject;
@@ -37,7 +37,11 @@ export function qualifiedName(name: string, options: Options): string {
 /**
  * Returns the file to import for a given model
  */
-export function modelFile(pathToModels: string, name: string, options: Options): string {
+export function modelFile(pathToModels: string, name: string, options: Options, mappedModel?: ModelMapping): string {
+  if (mappedModel) {
+    return mappedModel.mappingImport;
+  }
+
   let dir = pathToModels || '';
   if (dir.endsWith('/')) {
     dir = dir.substr(0, dir.length - 1);
@@ -161,6 +165,8 @@ export function escapeId(name: string) {
  * Returns the TypeScript type for the given type and options
  */
 export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, openApi: OpenAPIObject, container?: Model): string {
+
+
   if (!schemaOrRef) {
     // No schema
     return 'any';
@@ -171,6 +177,11 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
     const nullable = !!(resolved && (resolved as SchemaObject).nullable);
     const prefix = nullable ? 'null | ' : '';
     const name = simpleName(schemaOrRef.$ref);
+    const mappedModel = options.modelMappings?.find(m => m.name === name);
+    if (mappedModel) {
+      return mappedModel.mappingName;
+    }
+
     if (container && container.name === name) {
       // When referencing the same container, use its type name
       return prefix + container.typeName;

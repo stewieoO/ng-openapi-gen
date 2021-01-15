@@ -157,6 +157,26 @@
       "description": "When specified, does not generate a $Json suffix.",
       "default": false,
       "type": "boolean"
+    },
+    "modelMappings": {
+      "description": "Custom defined model and import mappings",
+      "default": false,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "mappingName": {
+            "type": "string"
+          },
+          "mappingImport": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "mappingName", "mappingImport"]
+      }
     }
   }
 }

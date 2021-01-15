@@ -150,6 +150,11 @@ export class NgOpenApiGen {
   private readModels() {
     const schemas = (this.openApi.components || {}).schemas || {};
     for (const name of Object.keys(schemas)) {
+
+      if (this.options.modelMappings?.some(m => m.name === name)) {
+        return;
+      }
+
       const schema = schemas[name];
       const model = new Model(this.openApi, name, schema, this.options);
       this.models.set(name, model);

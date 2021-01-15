@@ -46,10 +46,15 @@ export abstract class GenType {
     this._imports = new Imports(options);
   }
 
-  protected addImport(name: string) {
+  protected addImport(name: string, path?: string) {
     if (!this.skipImport(name)) {
       // Don't have to import to this own file
-      this._imports.add(name, this.pathToModels());
+      if (path) {
+        this._imports.add(name, path);
+      } else {
+        this._imports.add(name, this.pathToModels());
+      }
+
     }
   }
 
@@ -60,7 +65,7 @@ export abstract class GenType {
     this.additionalDependencies = [...this._additionalDependencies];
   }
 
-  protected collectImports(schema: SchemaObject | ReferenceObject | undefined, additional = false, processOneOf = false): void {
+  protected collectImports(schema: SchemaObject | ReferenceObject | undefined, additional = false, processOneOf = false, options?: Options): void {
     if (!schema) {
       return;
     } else if (schema.$ref) {
@@ -68,6 +73,13 @@ export abstract class GenType {
       if (additional) {
         this._additionalDependencies.add(dep);
       } else {
+        if (options && options.modelMappings) {
+          const mappedModel = options.modelMappings.find(m => m.name === dep);
+          if (mappedModel) {
+            this.addImport(mappedModel.mappingName, mappedModel.mappingImport);
+            return;
+          }
+        }
         this.addImport(dep);
       }
     } else {
