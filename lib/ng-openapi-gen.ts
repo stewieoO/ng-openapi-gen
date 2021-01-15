@@ -152,7 +152,7 @@ export class NgOpenApiGen {
     for (const name of Object.keys(schemas)) {
 
       if (this.options.modelMappings?.some(m => m.name === name)) {
-        return;
+        continue;
       }
 
       const schema = schemas[name];
