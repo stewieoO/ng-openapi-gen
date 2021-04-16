@@ -194,13 +194,11 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
   // An union of types
   const union = schema.oneOf || schema.anyOf || [];
   if (union.length > 0) {
-    return union.map(u => tsType(u, options, openApi, container)).join(' | ');
-  }
-
-  // All the types
-  const allOf = schema.allOf || [];
-  if (allOf.length > 0) {
-    return allOf.map(u => tsType(u, options, openApi, container)).join(' & ');
+    if (union.length > 1) {
+      return `(${union.map(u => tsType(u, options, openApi, container)).join(' | ')})`;
+    } else {
+      return union.map(u => tsType(u, options, openApi, container)).join(' | ');
+    }
   }
 
   const type = schema.type || 'any';
@@ -208,6 +206,13 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
   // An array
   if (type === 'array' || schema.items) {
     return `Array<${tsType(schema.items || {}, options, openApi, container)}>`;
+  }
+
+  // All the types
+  const allOf = schema.allOf || [];
+  let intersectionType: string[] = [];
+  if (allOf.length > 0) {
+    intersectionType = allOf.map(u => tsType(u, options, openApi, container));
   }
 
   // An object
@@ -218,6 +223,9 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
     const required = schema.required;
     for (const propName of Object.keys(properties)) {
       const property = properties[propName];
+      if (!property) {
+        continue;
+      }
       const propRequired = required && required.includes(propName);
       if (first) {
         first = false;
@@ -228,7 +236,11 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
       if (!propRequired) {
         result += '?';
       }
-      result += `: ${tsType(property, options, openApi, container)}`;
+      let propertyType = tsType(property, options, openApi, container);
+      if ((property as SchemaObject).nullable) {
+        propertyType = `${propertyType} | null`;
+      }
+      result += `: ${propertyType}`;
     }
     if (schema.additionalProperties) {
       const additionalProperties = schema.additionalProperties === true ? {} : schema.additionalProperties;
@@ -238,7 +250,11 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
       result += `[key: string]: ${tsType(additionalProperties, options, openApi, container)}`;
     }
     result += ' }';
-    return result;
+    intersectionType.push(result);
+  }
+
+  if (intersectionType.length > 0) {
+    return intersectionType.join(' & ');
   }
 
   // Inline enum

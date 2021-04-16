@@ -84,6 +84,12 @@ export interface Options {
   /** When specified, does not generate a $Json suffix. */
   skipJsonSuffix?: boolean;
 
+  customizedResponseType?: {
+    [key: string]: {
+      toUse: 'arraybuffer' | 'blob' | 'json' | 'document'
+    }
+  };
+
   modelMappings?: ModelMapping[];
 }
 

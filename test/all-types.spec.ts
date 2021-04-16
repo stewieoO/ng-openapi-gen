@@ -149,7 +149,7 @@ describe('Generation tests using all-types.json', () => {
       const decl = ast.declarations[0] as TypeAliasDeclaration;
       expect(decl.name).toBe('Union');
       const text = ts.substring(decl.start || 0, decl.end || ts.length);
-      expect(text).toBe('export type Union = { [key: string]: any } | RefEnum | RefIntEnum | RefNamedIntEnum | Container;');
+      expect(text).toBe('export type Union = ({ [key: string]: any } | RefEnum | RefIntEnum | RefNamedIntEnum | Container);');
       done();
     });
   });
@@ -166,7 +166,7 @@ describe('Generation tests using all-types.json', () => {
       const decl = ast.declarations[0] as TypeAliasDeclaration;
       expect(decl.name).toBe('Disjunct');
       const text = ts.substring(decl.start || 0, decl.end || ts.length);
-      expect(text).toBe('export type Disjunct = { \'ref\'?: ReferencedInNullableOneOf } | ABRefObject | XYRefObject | ReferencedInOneOf | EscapedProperties;');
+      expect(text).toBe('export type Disjunct = ({ \'ref\'?: ReferencedInNullableOneOf | null } | ABRefObject | XYRefObject | ReferencedInOneOf | EscapedProperties);');
       done();
     });
   });
@@ -323,6 +323,27 @@ describe('Generation tests using all-types.json', () => {
     });
   });
 
+
+  it('InlineObject model', done => {
+    const ref = gen.models.get('InlineObject');
+    const ts = gen.templates.apply('model', ref);
+    const parser = new TypescriptParser();
+    parser.parseSource(ts).then(ast => {
+      expect(ast.imports.length).toBe(1);
+      expect(ast.imports.find(i => i.libraryName === './ref-enum')).withContext('ref-enum import').toBeDefined();
+      expect(ast.declarations.length).toBe(1);
+      expect(ast.declarations[0]).toEqual(jasmine.any(InterfaceDeclaration));
+      const decl = ast.declarations[0] as InterfaceDeclaration;
+      expect(decl.name).toBe('InlineObject');
+      expect(decl.properties.length).toBe(1);
+      const prop = decl.properties[0];
+      expect(prop.name).toBe('object');
+      expect(prop.type).withContext('object property').toBe('{ \'string\'?: string, \'nullableString\'?: string | null, \'ref\'?: RefEnum, \'nullableRef\'?: RefEnum | null }');
+      expect(prop.isOptional).toBeTrue();
+      done();
+    });
+  });
+
   it('Container model', done => {
     const container = gen.models.get('Container');
     const ts = gen.templates.apply('model', container);
@@ -370,7 +391,7 @@ describe('Generation tests using all-types.json', () => {
       assertProperty('arrayOfABRefObjectsProp', 'Array<ABRefObject>');
       assertProperty('arrayOfAnyProp', 'Array<any>');
       assertProperty('nestedObject', '{ \'p1\'?: string, \'p2\'?: number, ' +
-        '\'deeper\'?: { \'d1\': ABRefObject, \'d2\'?: string | Array<ABRefObject> | number } }');
+        '\'deeper\'?: { \'d1\': ABRefObject, \'d2\'?: (string | Array<ABRefObject> | number) } }');
       assertProperty('dynamic', '{ [key: string]: XYRefObject }');
       assertProperty('stringEnumProp', '\'a\' | \'b\' | \'c\'');
       assertProperty('intEnumProp', '1 | 2 | 3');
