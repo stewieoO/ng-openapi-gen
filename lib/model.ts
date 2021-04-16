@@ -11,6 +11,7 @@ import { Property } from './property';
 export class Model extends GenType {
 
   // General type
+
   isSimple: boolean;
   isEnum: boolean;
   isObject: boolean;

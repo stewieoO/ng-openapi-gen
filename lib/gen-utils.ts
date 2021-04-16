@@ -220,22 +220,22 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
     let result = '{ ';
     let first = true;
     const properties = schema.properties || {};
-    const required = schema.required;
+    // const required = schema.required;
     for (const propName of Object.keys(properties)) {
       const property = properties[propName];
       if (!property) {
         continue;
       }
-      const propRequired = required && required.includes(propName);
+      // const propRequired = required && required.includes(propName);
       if (first) {
         first = false;
       } else {
         result += ', ';
       }
       result += `'${propName}'`;
-      if (!propRequired) {
-        result += '?';
-      }
+      // if (!propRequired) {
+      result += '?';
+      // }
       let propertyType = tsType(property, options, openApi, container);
       if ((property as SchemaObject).nullable) {
         propertyType = `${propertyType} | null`;
