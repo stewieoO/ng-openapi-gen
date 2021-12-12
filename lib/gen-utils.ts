@@ -219,7 +219,7 @@ export function tsType(schemaOrRef: SchemaOrRef | undefined, options: Options, o
   if (type === 'object' || schema.properties) {
     let result = '{\n';
     const properties = schema.properties || {};
-    // const required = schema.required;
+    const required = schema.required;
     for (const propName of Object.keys(properties)) {
       const property = properties[propName];
       if (!property) {
